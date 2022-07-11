@@ -4,8 +4,8 @@
 gcc -pthread -o Thread Time_Interval_Thread.c
 # timeout 10 ./Thread "1"
 
-# X period
-interval=1
+# get time with X period for (interval) seconds, can be changed for better surveying
+interval=5
 
 #run 5 times
 for i in {6..2}
