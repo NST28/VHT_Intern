@@ -1,8 +1,3 @@
 # VHT_Intern
-Project assigned by company
+Project assigned by company stored in folder
 
-open folder containing "Thread_Time.sh" and "Time_Interval_Thread.c"
-
-run ./Thread_Time.sh
-
-Time and offset data will be saved to time_and_interval.txt file
