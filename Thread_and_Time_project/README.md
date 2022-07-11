@@ -6,6 +6,8 @@ run ./Thread_Time.sh
 
 Time and offset data will be saved to time_and_interval.txt file
 
+plotting process using offset_data.txt and plot_offset.plt need further developed
+
 - - - -
 #### 1. Time_Interval_Thread.c ####
 
