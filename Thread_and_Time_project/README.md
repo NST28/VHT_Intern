@@ -23,3 +23,9 @@ Store frequency value X (ns)
 #### 4. time_and_interval.txt ####
 
 Store date, time and offset value to previous captured time
+
+#### 5. offset_data.txt and plot_offset.plt (uncompleted) ####
+
+offset_data.txt store time offset value help further ploting proccess
+
+plot_offset.plt is a bash scripts using gnuplot to plot the offset data above
