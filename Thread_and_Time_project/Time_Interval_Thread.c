@@ -52,7 +52,7 @@ void *Sample_function(void * SAMPLE){
    strftime(buff, sizeof buff, "%F %T", gmtime(&ts.tv_sec));
    printf("Time: %s.%09ld  --offset: ", buff, ts.tv_nsec);
 
-   // Save date and time value to T variable
+   // Save date, time, offset value to T 
    snprintf(T, sizeof T, "%s.%09ld offset: %.9f \n", buff, ts.tv_nsec, offset);
 
    // return flag for Input
@@ -79,6 +79,7 @@ void *Logging_function(void *LOGGING){
    offset = ((double)ts.tv_sec + 1.0e-9*ts.tv_nsec) - ((double)ts_previous.tv_sec + 1.0e-9*ts_previous.tv_nsec);
    printf("%.9f seconds\n", offset);
 
+   // Save offset value to offset_data.txt
    fp_offset = fopen("offset_data.txt","a");
    if (fp_offset){
       fprintf(fp_offset, "%.9f\n", offset);
