@@ -1,0 +1,5 @@
+X frequency: 1000000
+X frequency: 100000
+X frequency: 10000
+X frequency: 1000
+X frequency: 100
