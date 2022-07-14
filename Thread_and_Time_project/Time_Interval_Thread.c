@@ -37,37 +37,40 @@ struct timespec ts_previous = {0,0};
 
 void *Sample_function(void * SAMPLE){
 
-   while(1){
-   // check if X frequency changed (Input)
-   pthread_mutex_lock(&mtx_input);
-   while(input_flag ==0){
-      pthread_cond_wait(&condition_input, &mtx_input);
-   }
-   pthread_mutex_unlock(&mtx_input);
-
-
    // Read current date and time of the system
-
-   // timespec_get(&ts, TIME_UTC);
    clock_gettime(CLOCK_REALTIME, &ts);
    char buff[100];
-   strftime(buff, sizeof buff, "%F %T", gmtime(&ts.tv_sec));
-   printf("Time: %s.%09ld  --offset: ", buff, ts.tv_nsec);
 
-   // Save date and time value to T variable
-   snprintf(T, sizeof T, "%s.%09ld offset: %.9f \n", buff, ts.tv_nsec, offset);
+   while(1){
 
-   // return flag for Input
-   input_flag = 0;
+      // check if X frequency changed (Input)
+      pthread_mutex_lock(&mtx_input);
+      while(input_flag ==0){
+         pthread_cond_wait(&condition_input, &mtx_input);
+      }
+      pthread_mutex_unlock(&mtx_input);
 
-   // Create signal for LOGGING thread 
-   pthread_mutex_lock(&mtx_sample);
-   sample_flag = 1;
-   pthread_cond_signal(&condition_sample);
-   pthread_mutex_unlock(&mtx_sample);
-   
-   // sleep for X nanoseconds
-   nanosleep((const struct timespec[]){{0, X}}, NULL);
+      
+      ts.tv_nsec += X;
+
+      // Sleep X nanosecond
+      clock_nanosleep(CLOCK_REALTIME, TIMER_ABSTIME, &ts, NULL);
+
+      clock_gettime(CLOCK_REALTIME, &current);
+
+      snprintf(T, sizeof T, "%s.%09ld offset: %.9f \n", current.tv_sec, current.tv_nsec, offset);
+
+      // return flag for Input
+      input_flag = 0;
+
+      // Create signal for LOGGING thread 
+      pthread_mutex_lock(&mtx_sample);
+      sample_flag = 1;
+      pthread_cond_signal(&condition_sample);
+      pthread_mutex_unlock(&mtx_sample);
+      
+      // sleep for X nanoseconds
+      // nanosleep((const struct timespec[]){{0, X}}, NULL);
    }
 }
 
@@ -144,16 +147,11 @@ int main(int argc, char** argv) {
    printf("X frequency: %d", X);
 
    sprintf(file_name,"offset_data_%s.txt", argv[1]);
-   
 
    // Create independent threads each of which will execute function   //
    iret1 = pthread_create( &INPUT, NULL, Input_function, (void*) &INPUT);
    iret2 = pthread_create( &SAMPLE, NULL, Sample_function, (void *)&SAMPLE);  
    iret3 = pthread_create( &LOGGING, NULL, Logging_function, (void*) &LOGGING);
-
-   // Wait till threads are complete before main continues. Unless we  //
-   // wait we run the risk of executing an exit which will terminate   //
-   // the process and all threads before the threads have completed.   //
 
    pthread_join( INPUT, NULL);
    pthread_join( SAMPLE, NULL);

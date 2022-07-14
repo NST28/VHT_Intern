@@ -8,7 +8,7 @@ rm *offset_data_*
 gcc -pthread -o Thread Time_Interval_Thread.c
 
 # get time with X period for (interval) seconds, can be changed for better surveying
-interval=60
+interval=30
 
 #run 5 times
 for i in {6..2} 
