@@ -8,6 +8,8 @@ Time and offset data will be saved to time_and_interval.txt file
 
 plotting process using offset_data.txt and plot_offset.plt need further developed
 
+Đánh giá kết quả nằm trong mục
+
 - - - -
 #### 1. Time_Interval_Thread.c ####
 
