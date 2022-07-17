@@ -8,7 +8,7 @@ Time and offset data will be saved to time_and_interval.txt file
 
 plotting process using offset_data.txt and plot_offset.plt need further developed
 
-Đánh giá kết quả nằm trong mục
+Đánh giá kết quả nằm trong mục Intership_report_Thread_Ngo_Sy_Trung.pdf
 
 - - - -
 #### 1. Time_Interval_Thread.c ####
