@@ -12,6 +12,10 @@ static char T[60];
 static int start = 1;
 static float offset;
 static char file_name[30];
+static int loop = 1;
+
+static long diff_sec;
+static long diff_nsec;
 
 
 FILE *fp;
@@ -32,33 +36,47 @@ static int input_flag = 0;
 static int logging_flag = 0;
 
 struct timespec ts = {0,0};
+struct timespec current = {0,0};
+// struct timespec current = {0,0};
 struct timespec ts_previous = {0,0};
 
 
-void *Sample_function(void * SAMPLE){
+void *Sample_function(void * SAMPLE)
+{
 
    // Read current date and time of the system
    clock_gettime(CLOCK_REALTIME, &ts);
    char buff[100];
 
-   while(1){
+   while(1)
+   {
 
       // check if X frequency changed (Input)
       pthread_mutex_lock(&mtx_input);
-      while(input_flag ==0){
+      while(input_flag ==0)
+      {
          pthread_cond_wait(&condition_input, &mtx_input);
       }
       pthread_mutex_unlock(&mtx_input);
 
-      
       ts.tv_nsec += X;
 
-      // Sleep X nanosecond
-      clock_nanosleep(CLOCK_REALTIME, TIMER_ABSTIME, &ts, NULL);
+      if(ts.tv_nsec > 1000000000)
+      {
+         // temp = ts.tv_nsec;
+         ts.tv_nsec = ts.tv_nsec - 1000000000;
+         ts.tv_sec++;
+      }
+      clock_nanosleep(CLOCK_REALTIME,TIMER_ABSTIME, &ts,NULL);
 
-      clock_gettime(CLOCK_REALTIME, &current);
+      // Save current time
+      clock_gettime(CLOCK_REALTIME,&current);
 
-      snprintf(T, sizeof T, "%s.%09ld offset: %.9f \n", current.tv_sec, current.tv_nsec, offset);
+      // ts.tv_nsec += X;
+      // // Sleep X nanosecond
+      // clock_nanosleep(CLOCK_REALTIME, TIMER_ABSTIME, &ts, NULL);
+      // clock_gettime(CLOCK_REALTIME, &current);
+      snprintf(T, sizeof T, "%ld.%09ld offset: %ld.%09ld \n", current.tv_sec, current.tv_nsec, diff_sec, diff_nsec);
 
       // return flag for Input
       input_flag = 0;
@@ -68,55 +86,71 @@ void *Sample_function(void * SAMPLE){
       sample_flag = 1;
       pthread_cond_signal(&condition_sample);
       pthread_mutex_unlock(&mtx_sample);
-      
-      // sleep for X nanoseconds
-      // nanosleep((const struct timespec[]){{0, X}}, NULL);
    }
 }
 
 void *Logging_function(void *LOGGING){
    
    while(1){
-   pthread_mutex_lock(&mtx_sample);
-   while(sample_flag ==0){
-      pthread_cond_wait(&condition_sample, &mtx_sample);
-   }
-   pthread_mutex_unlock(&mtx_sample);
+      pthread_mutex_lock(&mtx_sample);
+      while(sample_flag ==0)
+      {
+         pthread_cond_wait(&condition_sample, &mtx_sample);
+      }
 
-   // Calculate offset
-   offset = ((double)ts.tv_sec + 1.0e-9*ts.tv_nsec) - ((double)ts_previous.tv_sec + 1.0e-9*ts_previous.tv_nsec);
-   printf("%.9f seconds\n", offset);
+      // Point to offset_data_X.txt
+      fp_offset = fopen(file_name,"a");
 
+      // Calculate offset
+      // offset = ((double)ts.tv_sec + 1.0e-9*ts.tv_nsec) - ((double)ts_previous.tv_sec + 1.0e-9*ts_previous.tv_nsec);
+      // printf("%.9f seconds\n", offset);
 
-   // Save offset to specific file name
-   fp_offset = fopen(file_name,"a");
-   if (fp_offset){
-      fprintf(fp_offset, "%.9f\n", offset);
-   }
-   else{
-      printf("Failed to open the file \n");
-   }
-   fclose(fp_offset);
+      diff_sec = ((long) current.tv_sec) - ts_previous.tv_sec ;
+      diff_nsec;
 
-   // Save previous time
-   ts_previous.tv_sec = ts.tv_sec;
-   ts_previous.tv_nsec = ts.tv_nsec; 
+      if(ts_previous.tv_nsec != current.tv_nsec || ts_previous.tv_sec != current.tv_sec)
+      {
+         if(current.tv_nsec > ts_previous.tv_nsec)
+         {
+            diff_nsec = current.tv_nsec - ts_previous.tv_nsec;
+         }
+         else 
+         {
+            diff_nsec = 1000000000 + current.tv_nsec - ts_previous.tv_nsec ;
+            diff_sec = diff_sec - 1;
+         }
+         fprintf(file,"\n%ld.%09ld", diff_sec, diff_nsec);  
+         
+      }
 
-   // Save date and time to "time_and_interval.txt"
-   fp = fopen("time_and_interval.txt","a");
-   if (fp){
-      fputs(T,fp);
-   }
-   else{
-      printf("Failed to open the file \n");
-   }
-   fclose(fp);
-   
-   // pthread_mutex_lock(&mtx_sample2);
-   // logging_flag = 1;
-   sample_flag = 0;
-   // pthread_cond_signal(&cond2);
-   // pthread_mutex_unlock(&mtx_sample2);
+      ts_previous.tv_nsec = current.tv_nsec;
+      ts_previous.tv_sec  = current.tv_sec;
+
+      // Save offset to specific file name
+      // fp_offset = fopen(file_name,"a");
+      if (fp_offset){
+         fprintf(fp_offset, "%ld.%09ld\n", diff_sec, diff_nsec);
+      }
+      else{
+         printf("Failed to open the file \n");
+      }
+      fclose(fp_offset);
+
+      // Save date and time to "time_and_interval.txt"
+      fp = fopen("time_and_interval.txt","a");
+      if (fp){
+         fputs(T,fp);
+      }
+      else{
+         printf("Failed to open the file \n");
+      }
+      fclose(fp);
+      
+      // Return sample_flag value to continue save time value
+      sample_flag = 0;
+
+      pthread_mutex_unlock(&mtx_sample);
+
    }
 }
 
