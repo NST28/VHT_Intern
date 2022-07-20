@@ -16,6 +16,8 @@ static int loop = 1;
 
 static long diff_sec;
 static long diff_nsec;
+static long nano_diff_sec = 0;
+static long nano_diff_nsec = 0;
 
 
 FILE *fp;
@@ -72,12 +74,6 @@ void *Sample_function(void * SAMPLE)
       // Save current time
       clock_gettime(CLOCK_REALTIME,&current);
 
-      // ts.tv_nsec += X;
-      // // Sleep X nanosecond
-      // clock_nanosleep(CLOCK_REALTIME, TIMER_ABSTIME, &ts, NULL);
-      // clock_gettime(CLOCK_REALTIME, &current);
-      snprintf(T, sizeof T, "%ld.%09ld offset: %ld.%09ld \n", current.tv_sec, current.tv_nsec, diff_sec, diff_nsec);
-
       // return flag for Input
       input_flag = 0;
 
@@ -90,6 +86,10 @@ void *Sample_function(void * SAMPLE)
 }
 
 void *Logging_function(void *LOGGING){
+
+   // printf("X frequency: %d", X);
+
+   int i=0;
    
    while(1){
       pthread_mutex_lock(&mtx_sample);
@@ -97,12 +97,13 @@ void *Logging_function(void *LOGGING){
       {
          pthread_cond_wait(&condition_sample, &mtx_sample);
       }
+      
 
       // Point to offset_data_X.txt
-      fp_offset = fopen(file_name,"a");
+      
 
       // Calculate offset
-      // offset = ((double)ts.tv_sec + 1.0e-9*ts.tv_nsec) - ((double)ts_previous.tv_sec + 1.0e-9*ts_previous.tv_nsec);
+      // offset = ((double)current.tv_sec + 1.0e-9*current.tv_nsec) - ((double)ts_previous.tv_sec + 1.0e-9*ts_previous.tv_nsec);
       // printf("%.9f seconds\n", offset);
 
       diff_sec = ((long) current.tv_sec) - ts_previous.tv_sec ;
@@ -119,7 +120,7 @@ void *Logging_function(void *LOGGING){
             diff_nsec = 1000000000 + current.tv_nsec - ts_previous.tv_nsec ;
             diff_sec = diff_sec - 1;
          }
-         fprintf(file,"\n%ld.%09ld", diff_sec, diff_nsec);  
+         // fprintf(file,"\n%ld.%09ld", diff_sec, diff_nsec);  
          
       }
 
@@ -128,23 +129,30 @@ void *Logging_function(void *LOGGING){
 
       // Save offset to specific file name
       // fp_offset = fopen(file_name,"a");
+      // if (fp_offset){
+      //    fprintf(fp_offset, ".%09ld\n", offset);
+      // }
+      // else{
+      //    printf("Failed to open the file \n");
+      // }    
+
       if (fp_offset){
-         fprintf(fp_offset, "%ld.%09ld\n", diff_sec, diff_nsec);
+         fprintf(fp_offset, "%d %ld%09ld \n", i, diff_sec, diff_nsec);
       }
       else{
          printf("Failed to open the file \n");
       }
-      fclose(fp_offset);
+
+      i++;
+      
 
       // Save date and time to "time_and_interval.txt"
-      fp = fopen("time_and_interval.txt","a");
       if (fp){
-         fputs(T,fp);
+         fprintf(fp, "%ld.%09ld offset: %ld.%09ld \n", current.tv_sec, current.tv_nsec, diff_sec, diff_nsec);
       }
       else{
          printf("Failed to open the file \n");
       }
-      fclose(fp);
       
       // Return sample_flag value to continue save time value
       sample_flag = 0;
@@ -178,9 +186,12 @@ int main(int argc, char** argv) {
    int  iret1, iret2, iret3;
 
    // fp = fopen("time_and_interval.txt","w");
-   printf("X frequency: %d", X);
+   
 
    sprintf(file_name,"offset_data_%s.txt", argv[1]);
+
+   fp_offset = fopen(file_name,"a");
+   fp = fopen("time_and_interval.txt","a");
 
    // Create independent threads each of which will execute function   //
    iret1 = pthread_create( &INPUT, NULL, Input_function, (void*) &INPUT);
@@ -190,6 +201,10 @@ int main(int argc, char** argv) {
    pthread_join( INPUT, NULL);
    pthread_join( SAMPLE, NULL);
    pthread_join( LOGGING, NULL);
+
+   fclose(fp);
+   fclose(fp_offset);
+
    exit(0);
 }
 
