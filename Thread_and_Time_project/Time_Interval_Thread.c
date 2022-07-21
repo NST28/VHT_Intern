@@ -54,12 +54,12 @@ void *Sample_function(void * SAMPLE)
    {
 
       // check if X frequency changed (Input)
-      pthread_mutex_lock(&mtx_input);
-      while(input_flag ==0)
-      {
-         pthread_cond_wait(&condition_input, &mtx_input);
-      }
-      pthread_mutex_unlock(&mtx_input);
+      // pthread_mutex_lock(&mtx_input);
+      // while(input_flag ==0)
+      // {
+      //    pthread_cond_wait(&condition_input, &mtx_input);
+      // }
+      // pthread_mutex_unlock(&mtx_input);
 
       ts.tv_nsec += X;
 
@@ -125,16 +125,7 @@ void *Logging_function(void *LOGGING){
       }
 
       ts_previous.tv_nsec = current.tv_nsec;
-      ts_previous.tv_sec  = current.tv_sec;
-
-      // Save offset to specific file name
-      // fp_offset = fopen(file_name,"a");
-      // if (fp_offset){
-      //    fprintf(fp_offset, ".%09ld\n", offset);
-      // }
-      // else{
-      //    printf("Failed to open the file \n");
-      // }    
+      ts_previous.tv_sec  = current.tv_sec;   
 
       if (fp_offset){
          fprintf(fp_offset, "%d %ld%09ld \n", i, diff_sec, diff_nsec);
@@ -166,17 +157,15 @@ void *Input_function(void *INPUT){
 
    while(1){
    // Read input from freq.txt 
-   fp_X = fopen("freq.txt","r");
    fscanf (fp_X, "%d", &X);
 
    // Notify Sample thread about X frequency
-   pthread_mutex_lock(&mtx_input);
-   input_flag = 1;
-   pthread_cond_signal(&condition_input);
-   pthread_mutex_unlock(&mtx_input);
-
+   // pthread_mutex_lock(&mtx_input);
+   // input_flag = 1;
+   // pthread_cond_signal(&condition_input);
+   // pthread_mutex_unlock(&mtx_input);
    // printf("%d \n",X);
-   fclose(fp_X);
+   
    }
 }
 
@@ -190,6 +179,7 @@ int main(int argc, char** argv) {
 
    sprintf(file_name,"offset_data_%s.txt", argv[1]);
 
+   fp_X = fopen("freq.txt","r");
    fp_offset = fopen(file_name,"a");
    fp = fopen("time_and_interval.txt","a");
 
@@ -204,6 +194,7 @@ int main(int argc, char** argv) {
 
    fclose(fp);
    fclose(fp_offset);
+   fclose(fp_X);
 
    exit(0);
 }
