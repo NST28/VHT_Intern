@@ -6,7 +6,7 @@ run ./Thread_Time.sh
 
 Time and offset data will be saved to time_and_interval.txt file
 
-plotting process using offset_data.txt and plot_offset.plt need further developed
+plotting process using offset_data_($freq).txt and histogram plot inside Graph folder
 
 **Result evalutation inside Intership_report_Thread_Ngo_Sy_Trung.pdf**
 
@@ -32,9 +32,3 @@ Store frequency value X (ns)
 
 Store date, time and offset value to previous captured time
 
-- - - -
-#### 5. offset_data.txt and plot_offset.plt (uncompleted) ####
-
-offset_data.txt store time offset value help further ploting proccess
-
-plot_offset.plt is a bash scripts using gnuplot to plot the offset data above
